@@ -8,11 +8,11 @@ import {
   View,
 } from "react-native";
 import { Feather } from "@expo/vector-icons";
-// import { useCart } from "./context/CartContext";
 import { useCart } from "../../context/CartContext";
+
 const CartSummary = () => {
-  // const { cart, setCart } = route.params;
   const { cart, setCart } = useCart();
+
   const calculateTotal = () => {
     return cart
       .reduce((total, item) => total + item.price * item.quantity, 0)
@@ -54,28 +54,26 @@ const CartSummary = () => {
                   <Text style={styles.itemPrice}>
                     ${item.price.toFixed(2)} x {item.quantity}
                   </Text>
+                  <Text style={styles.itemSubtotal}>
+                    Subtotal: ${(item.price * item.quantity).toFixed(2)}
+                  </Text>
                 </View>
-                <Text style={styles.itemSubtotal}>
-                  ${(item.price * item.quantity).toFixed(2)}
-                </Text>
-                <View style={styles.actionButtons}>
-                  <TouchableOpacity
-                    onPress={() => handleRemoveFromCart(item.id)}
-                    style={styles.removeButton}
-                  >
-                    <Text style={styles.removeButtonText}>-</Text>
-                  </TouchableOpacity>
-                  <TouchableOpacity
-                    onPress={() => handleAddToCart(item.id)}
-                    style={styles.addButton}
-                  >
-                    <Text style={styles.addButtonText}>+</Text>
-                  </TouchableOpacity>
+                <View style={styles.quantityControlContainer}>
+                  <View style={styles.quantityControl}>
+                    <TouchableOpacity
+                      onPress={() => handleRemoveFromCart(item.id)}
+                    >
+                      <Text style={styles.quantityButton}>-</Text>
+                    </TouchableOpacity>
+                    <Text style={styles.quantityText}>{item.quantity}</Text>
+                    <TouchableOpacity onPress={() => handleAddToCart(item.id)}>
+                      <Text style={styles.quantityButton}>+</Text>
+                    </TouchableOpacity>
+                  </View>
                 </View>
               </View>
             )}
           />
-          {/* Total Cost */}
           <View style={styles.totalContainer}>
             <Text style={styles.totalText}>Total:</Text>
             <Text style={styles.totalAmount}>${calculateTotal()}</Text>
@@ -84,7 +82,7 @@ const CartSummary = () => {
       ) : (
         <Text style={styles.emptyCartText}>
           Your cart is empty.{" "}
-          <Feather name="shopping-cart" size={24} color="white" />
+          <Feather name="shopping-cart" size={24} color="#888" />
         </Text>
       )}
     </View>
@@ -114,7 +112,8 @@ const styles = StyleSheet.create({
     elevation: 2,
   },
   itemDetails: {
-    // flex: 1,
+    flex: 1,
+    marginLeft: 15,
   },
   itemName: {
     fontSize: 16,
@@ -129,6 +128,7 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: "bold",
     color: "#333",
+    marginTop: 5,
   },
   totalContainer: {
     flexDirection: "row",
@@ -157,34 +157,32 @@ const styles = StyleSheet.create({
     width: 80,
     height: 80,
     borderRadius: 8,
-    marginRight: 15,
   },
-  actionButtons: {
-    flexDirection: "row",
+  quantityControlContainer: {
     alignItems: "center",
   },
-  removeButton: {
-    backgroundColor: "#ff4d4d",
-    paddingVertical: 5,
-    paddingHorizontal: 10,
-    borderRadius: 5,
-    marginRight: 5,
+  quantityControl: {
+    flexDirection: "row",
+    alignItems: "center",
+    backgroundColor: "#f0f0f0",
+    borderRadius: 25,
+    paddingVertical: 8,
+    paddingHorizontal: 15,
+    width: 100,
+    justifyContent: "space-between",
   },
-  removeButtonText: {
-    color: "#fff",
-    fontWeight: "bold",
-    fontSize: 14,
+  quantityButton: {
+    fontSize: 18,
+    fontWeight: "500",
+    color: "#333",
+    paddingHorizontal: 8,
   },
-  addButton: {
-    backgroundColor: "#4caf50",
-    paddingVertical: 5,
-    paddingHorizontal: 10,
-    borderRadius: 5,
-  },
-  addButtonText: {
-    color: "#fff",
-    fontWeight: "bold",
-    fontSize: 14,
+  quantityText: {
+    fontSize: 16,
+    fontWeight: "500",
+    color: "#333",
+    minWidth: 20,
+    textAlign: "center",
   },
 });
 
