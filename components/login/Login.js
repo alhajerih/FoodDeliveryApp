@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useContext, useState } from "react";
 import {
   View,
   Text,
@@ -6,60 +6,92 @@ import {
   TouchableOpacity,
   StyleSheet,
   Alert,
+  KeyboardAvoidingView,
+  Platform,
 } from "react-native";
-import AsyncStorage from "@react-native-async-storage/async-storage";
 import { useNavigation } from "@react-navigation/native";
+import Icon from "react-native-vector-icons/Ionicons";
+import { useMutation } from "@tanstack/react-query";
+import { login } from "../../src/api/auth";
+import UserContext from "../../context/UserContext";
 
 const Login = () => {
   const navigation = useNavigation();
+  const [userInfo, setUserInfo] = useState({ username: "", password: "" });
 
-  const [username, setUsername] = useState("");
-  const [password, setPassword] = useState("");
+  const [isPasswordVisible, setIsPasswordVisible] = useState(false);
+  const [authenticated, setAuthenticated] = useContext(UserContext);
 
-  const handleLogin = async () => {
-    try {
-      const userData = await AsyncStorage.getItem("userData");
-      if (userData) {
-        const { username: storedUsername, password: storedPassword } =
-          JSON.parse(userData);
-        if (username === storedUsername && password === storedPassword) {
-          Alert.alert("Success", "Logged in successfully!");
-          navigation.navigate("Restaurants"); // Navigate to Restaurants screen
-        } else {
-          Alert.alert("Error", "Invalid username or password.");
-        }
-      } else {
-        Alert.alert("Error", "No registered user found.");
-      }
-    } catch (error) {
-      Alert.alert("Error", "Failed to retrieve user data.");
+  const { mutate } = useMutation({
+    mutationFn: () => login(userInfo),
+
+    onSuccess: () => {
+      Alert.alert("Success", "Login successful!");
+      setAuthenticated(true);
+    },
+    onError: (error) => {
+      console.error(error);
+      Alert.alert("Error", "Login failed. Please check your credentials.");
+      setAuthenticated(false);
+    },
+  });
+
+  const togglePasswordVisibility = () => {
+    setIsPasswordVisible(!isPasswordVisible);
+  };
+
+  const handleLogin = () => {
+    if (!userInfo.username || !userInfo.password) {
+      Alert.alert("Error", "Please fill in all fields.");
+      return;
     }
+    mutate();
   };
 
   return (
-    <View style={styles.container}>
+    <KeyboardAvoidingView
+      behavior={Platform.OS === "ios" ? "padding" : "height"}
+      style={styles.container}
+    >
       <Text style={styles.title}>Log In</Text>
+
       <TextInput
         style={styles.input}
         placeholder="Username"
-        value={username}
-        onChangeText={setUsername}
+        value={userInfo.username}
+        onChangeText={(text) => setUserInfo({ ...userInfo, username: text })}
         autoCapitalize="none"
       />
-      <TextInput
-        style={styles.input}
-        placeholder="Password"
-        value={password}
-        onChangeText={setPassword}
-        secureTextEntry
-      />
+      <View style={styles.passwordContainer}>
+        <TextInput
+          style={styles.passwordInput}
+          placeholder="Password"
+          value={userInfo.password}
+          onChangeText={(text) => setUserInfo({ ...userInfo, password: text })}
+          secureTextEntry={!isPasswordVisible}
+          autoCapitalize="none"
+        />
+        <TouchableOpacity
+          onPress={togglePasswordVisibility}
+          style={styles.icon}
+        >
+          <Icon
+            name={isPasswordVisible ? "eye" : "eye-off"}
+            size={24}
+            color="gray"
+          />
+        </TouchableOpacity>
+      </View>
       <TouchableOpacity style={styles.loginButton} onPress={handleLogin}>
         <Text style={styles.loginButtonText}>Log In</Text>
       </TouchableOpacity>
-      <TouchableOpacity onPress={() => navigation.navigate("Register")}>
-        <Text style={styles.registerText}>Don't have an account? Register</Text>
-      </TouchableOpacity>
-    </View>
+      <Text style={styles.registerContainer}>
+        <Text>Don't have an account?</Text>
+        <TouchableOpacity onPress={() => navigation.navigate("Register")}>
+          <Text style={styles.registerText}> Register</Text>
+        </TouchableOpacity>
+      </Text>
+    </KeyboardAvoidingView>
   );
 };
 
@@ -88,6 +120,24 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: "#ddd",
   },
+  passwordContainer: {
+    width: "100%",
+    flexDirection: "row",
+    alignItems: "center",
+    borderWidth: 1,
+    borderColor: "#ddd",
+    borderRadius: 5,
+    backgroundColor: "#fff",
+    marginBottom: 15,
+    paddingHorizontal: 10,
+  },
+  passwordInput: {
+    flex: 1,
+    height: 50,
+  },
+  icon: {
+    padding: 10,
+  },
   loginButton: {
     backgroundColor: "#007bff",
     width: "100%",
@@ -100,9 +150,13 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: "bold",
   },
-  registerText: {
+  registerContainer: {
     marginTop: 20,
+    fontSize: 14,
+  },
+  registerText: {
     color: "#007bff",
     fontSize: 14,
+    marginBottom: -4,
   },
 });

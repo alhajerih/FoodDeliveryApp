@@ -6,18 +6,37 @@ import {
   Text,
   TouchableOpacity,
   View,
+  Dimensions,
 } from "react-native";
 import { useNavigation } from "@react-navigation/native";
+
+const { width } = Dimensions.get("window");
+
 const RestaurantList = ({ restaurants }) => {
   const navigation = useNavigation();
+
+  const renderRatingStars = (rating) => (
+    <View style={styles.ratingContainer}>
+      <Text style={styles.starIcon}>⭐</Text>
+      <Text style={styles.ratingText}>{rating}</Text>
+    </View>
+  );
+
   return (
     <FlatList
-      style={styles.restaurantsList}
+      style={{ height: "75%" }}
       data={restaurants}
-      keyExtractor={(item) => item.id.toString()}
+      keyExtractor={(item) => item._id.toString()}
+      contentContainerStyle={styles.listContainer}
+      showsVerticalScrollIndicator={false}
       renderItem={({ item }) => (
         <TouchableOpacity
-          onPress={() => navigation.navigate("Menu", { restaurant: item })}
+          style={styles.cardShadow}
+          onPress={() => {
+            console.log("Navigating with restaurantId:", item._id);
+            navigation.navigate("Menu", { restaurantId: item._id });
+          }}
+          activeOpacity={0.7}
         >
           <View style={styles.restaurantContainer}>
             <Image
@@ -27,14 +46,20 @@ const RestaurantList = ({ restaurants }) => {
             />
             <View style={styles.restaurantDetails}>
               <Text style={styles.restaurantName}>{item.name}</Text>
-              <Text style={styles.restaurantRating}>⭐{item.rating}</Text>
-              <Text style={styles.restaurantCategory}>{item.category}</Text>
-              <Text style={styles.deliveryTime}>{item.deliveryTime}</Text>
+              <View style={styles.infoRow}>
+                {renderRatingStars(item.rating)}
+                <Text style={styles.bulletPoint}>•</Text>
+                <Text style={styles.restaurantCategory}>
+                  {item.category?.name}
+                </Text>
+              </View>
+              <View style={styles.deliveryContainer}>
+                <Text style={styles.deliveryTime}>🕒 {item.deliveryTime}</Text>
+              </View>
             </View>
           </View>
         </TouchableOpacity>
       )}
-      // contentContainerStyle={styles.restaurantsList}
     />
   );
 };
@@ -42,47 +67,78 @@ const RestaurantList = ({ restaurants }) => {
 export default RestaurantList;
 
 const styles = StyleSheet.create({
-  restaurantsList: {
-    // flex: 1, // it push the list way down
-
-    paddingBottom: 20,
-    // overflow: "scroll",
-    // marginBottom: 40,
-    height: "60%",
+  listContainer: {
+    padding: 16,
+    paddingBottom: 100,
+  },
+  cardShadow: {
+    backgroundColor: "white",
+    borderRadius: 12,
+    marginBottom: 16,
+    shadowColor: "#000",
+    shadowOffset: {
+      width: 0,
+      height: 2,
+    },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 3,
   },
   restaurantContainer: {
     flexDirection: "row",
-    marginBottom: 15,
-    backgroundColor: "#fff",
-    borderRadius: 8,
     overflow: "hidden",
-    elevation: 3,
+    borderRadius: 12,
   },
   restaurantImage: {
-    width: 100,
-    height: 100,
+    width: width * 0.25,
+    height: width * 0.25,
+    borderTopLeftRadius: 12,
+    borderBottomLeftRadius: 12,
   },
   restaurantDetails: {
     flex: 1,
-    padding: 10,
+    padding: 12,
+    justifyContent: "space-between",
   },
   restaurantName: {
-    fontSize: 16,
-    fontWeight: "bold",
-    marginBottom: 5,
+    fontSize: 18,
+    fontWeight: "700",
+    color: "#1a1a1a",
+    marginBottom: 6,
   },
-  restaurantRating: {
+  infoRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    marginBottom: 6,
+  },
+  ratingContainer: {
+    flexDirection: "row",
+    alignItems: "center",
+  },
+  starIcon: {
     fontSize: 14,
-    color: "green",
-    marginBottom: 5,
+    marginRight: 4,
+  },
+  ratingText: {
+    fontSize: 14,
+    fontWeight: "600",
+    color: "#FFB800",
+  },
+  bulletPoint: {
+    marginHorizontal: 8,
+    color: "#C5C5C5",
   },
   restaurantCategory: {
     fontSize: 14,
-    color: "#555",
+    color: "#666666",
+    fontWeight: "500",
+  },
+  deliveryContainer: {
+    marginTop: 4,
   },
   deliveryTime: {
-    fontSize: 12,
-    color: "#888",
-    marginTop: 5,
+    fontSize: 13,
+    color: "#666666",
+    fontWeight: "500",
   },
 });

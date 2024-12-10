@@ -3,61 +3,128 @@ import {
   View,
   Text,
   TextInput,
+  Image,
   TouchableOpacity,
   StyleSheet,
   Alert,
+  KeyboardAvoidingView,
+  Platform,
 } from "react-native";
-import AsyncStorage from "@react-native-async-storage/async-storage";
 import { useNavigation } from "@react-navigation/native";
-
+import Icon from "react-native-vector-icons/Ionicons";
+import { register } from "../../src/api/auth";
+import { useMutation } from "@tanstack/react-query";
+import * as ImagePicker from "expo-image-picker";
 const Register = () => {
   const navigation = useNavigation();
+  const [userInfo, setUserInfo] = useState({ username: "", password: "" });
 
-  const [username, setUsername] = useState("");
-  const [password, setPassword] = useState("");
+  const [isPasswordVisible, setIsPasswordVisible] = useState(false);
+  const [image, setImage] = useState(null);
 
-  const handleRegister = async () => {
-    if (!username || !password) {
-      Alert.alert("Error", "Please fill in all fields.");
-      return;
-    }
+  const togglePasswordVisibility = () => {
+    setIsPasswordVisible(!isPasswordVisible);
+  };
+  const { mutate } = useMutation({
+    mutationFn: () => register(userInfo, image),
+    onSuccess: () => {
+      Alert.alert("Success", "Account created successfully");
+      navigation.navigate("Login");
+    },
+    onError: (error) => {
+      console.error(error);
+      Alert.alert("Error", "Registration failed. Please try again.");
+    },
+  });
 
-    try {
-      await AsyncStorage.setItem(
-        "userData",
-        JSON.stringify({ username, password })
-      );
-      Alert.alert("Success", "Account created!");
-      navigation.navigate("Login"); // Navigate to Login
-    } catch (error) {
-      Alert.alert("Error", "Failed to save user data.");
+  const pickImage = async () => {
+    // No permissions request is necessary for launching the image library
+    let result = await ImagePicker.launchImageLibraryAsync({
+      mediaTypes: ["images", "videos"],
+      allowsEditing: true,
+      aspect: [4, 3],
+      quality: 1,
+    });
+
+    console.log(result);
+
+    if (!result.canceled) {
+      setImage(result.assets[0].uri);
     }
   };
 
+  const handleRegister = () => {
+    console.log("Register button clicked");
+    if (!userInfo.username || !userInfo.password) {
+      console.log("Username or password is missing:", { username, password });
+
+      Alert.alert("Error", "Please fill in all fields");
+      return;
+    }
+
+    mutate();
+  };
+
   return (
-    <View style={styles.container}>
+    <KeyboardAvoidingView
+      behavior={Platform.OS === "ios" ? "padding" : "height"}
+      style={styles.container}
+    >
       <Text style={styles.title}>Register</Text>
       <TextInput
         style={styles.input}
         placeholder="Username"
-        value={username}
-        onChangeText={setUsername}
+        value={userInfo.username}
+        onChangeText={(text) => setUserInfo({ ...userInfo, username: text })}
         autoCapitalize="none"
       />
-      <TextInput
-        style={styles.input}
-        placeholder="Password"
-        value={password}
-        onChangeText={setPassword}
-        secureTextEntry
-      />
-      <TouchableOpacity style={styles.registerButton} onPress={handleRegister}>
+      <View style={styles.passwordContainer}>
+        <TextInput
+          style={styles.passwordInput}
+          placeholder="Password"
+          value={userInfo.password}
+          onChangeText={(text) => setUserInfo({ ...userInfo, password: text })}
+          secureTextEntry={!isPasswordVisible}
+          autoCapitalize="none"
+        />
+        <TouchableOpacity
+          onPress={togglePasswordVisibility}
+          style={styles.icon}
+        >
+          <Icon
+            name={isPasswordVisible ? "eye" : "eye-off"}
+            size={24}
+            color="gray"
+          />
+        </TouchableOpacity>
+      </View>
+      <TouchableOpacity style={{ marginTop: 20 }} onPress={pickImage}>
+        <Text style={{ fontSize: 16 }}>Upload Profile Image</Text>
+        {image && (
+          <Image
+            source={{ uri: image }}
+            style={{
+              width: 100,
+              height: 100,
+            }}
+          />
+        )}
+      </TouchableOpacity>
+      <TouchableOpacity
+        style={styles.registerButton}
+        onPress={() => {
+          handleRegister();
+        }}
+      >
         <Text style={styles.registerButtonText}>Register</Text>
       </TouchableOpacity>
-      <TouchableOpacity onPress={() => navigation.navigate("Login")}>
-        <Text style={styles.loginText}>Already have an account? Log In</Text>
-      </TouchableOpacity>
-    </View>
+      <Text style={styles.loginContainer}>
+        <Text>Already have an account?</Text>
+        <TouchableOpacity onPress={() => navigation.goBack()}>
+          <Text style={styles.loginText}> Log In</Text>
+        </TouchableOpacity>
+      </Text>
+    </KeyboardAvoidingView>
   );
 };
 
@@ -86,6 +153,24 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: "#ddd",
   },
+  passwordContainer: {
+    width: "100%",
+    flexDirection: "row",
+    alignItems: "center",
+    borderWidth: 1,
+    borderColor: "#ddd",
+    borderRadius: 5,
+    backgroundColor: "#fff",
+    marginBottom: 15,
+    paddingHorizontal: 10,
+  },
+  passwordInput: {
+    flex: 1,
+    height: 50,
+  },
+  icon: {
+    padding: 10,
+  },
   registerButton: {
     backgroundColor: "#007bff",
     width: "100%",
@@ -98,8 +183,11 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: "bold",
   },
-  loginText: {
+  loginContainer: {
     marginTop: 20,
+  },
+  loginText: {
+    marginBottom: -4,
     color: "#007bff",
     fontSize: 14,
   },

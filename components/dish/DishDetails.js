@@ -1,12 +1,19 @@
 import React from "react";
-import { Image, StyleSheet, Text, TouchableOpacity, View } from "react-native";
+import {
+  Image,
+  StyleSheet,
+  Text,
+  TouchableOpacity,
+  View,
+  ScrollView,
+  SafeAreaView,
+} from "react-native";
 import { useCart } from "../../context/CartContext";
 import { Feather } from "@expo/vector-icons";
 
 const DishDetails = ({ dish }) => {
   const { cart, setCart } = useCart();
 
-  // Add item to the cart
   const handleAddToCart = () => {
     setCart((prevCart) => {
       const existingItem = prevCart.find((cartItem) => cartItem.id === dish.id);
@@ -20,7 +27,6 @@ const DishDetails = ({ dish }) => {
     });
   };
 
-  // Remove item from the cart
   const handleRemoveFromCart = () => {
     setCart((prevCart) => {
       const existingItem = prevCart.find((cartItem) => cartItem.id === dish.id);
@@ -34,96 +40,120 @@ const DishDetails = ({ dish }) => {
     });
   };
 
-  // Find the cart item for this dish
   const cartItem = cart.find((cartItem) => cartItem.id === dish.id);
 
   return (
-    <View style={styles.screenContainer}>
-      <Image
-        source={{ uri: dish.image }}
-        style={styles.dishImage}
-        resizeMode="cover"
-      />
-      <View style={styles.dishDetails}>
-        <Text style={styles.dishName}>{dish.name}</Text>
-        <Text style={styles.dishPrice}>Price: ${dish.price.toFixed(2)}</Text>
-        <Text style={styles.dishDescription}>{dish.description}</Text>
-      </View>
-      <View style={styles.quantityControlContainer}>
-        <View style={styles.quantityControl}>
-          <TouchableOpacity
-            onPress={handleRemoveFromCart}
-            disabled={!cartItem || cartItem.quantity === 0}
-          >
-            <Text style={styles.quantityButton}>-</Text>
-          </TouchableOpacity>
-          <Text style={styles.quantityText}>
-            {cartItem ? cartItem.quantity : 0}
-          </Text>
-          <TouchableOpacity onPress={handleAddToCart}>
-            <Text style={styles.quantityButton}>+</Text>
-          </TouchableOpacity>
+    <SafeAreaView style={styles.safeArea}>
+      <ScrollView style={styles.scrollView}>
+        <View style={styles.imageContainer}>
+          <Image
+            source={{ uri: dish.image }}
+            style={styles.dishImage}
+            resizeMode="cover"
+          />
         </View>
-      </View>
-    </View>
+        <View style={styles.contentContainer}>
+          <View style={styles.dishDetails}>
+            <Text style={styles.dishName}>{dish.name}</Text>
+            <Text style={styles.dishPrice}>${dish.price.toFixed(2)}</Text>
+            <Text style={styles.dishDescription}>{dish.description}</Text>
+          </View>
+          <View style={styles.quantityControlContainer}>
+            <TouchableOpacity
+              style={[
+                styles.quantityButton,
+                !cartItem && styles.quantityButtonDisabled,
+              ]}
+              onPress={handleRemoveFromCart}
+              disabled={!cartItem || cartItem.quantity === 0}
+            >
+              <Feather
+                name="minus"
+                size={24}
+                color={cartItem ? "white" : "#B0B0B0"}
+              />
+            </TouchableOpacity>
+            <Text style={styles.quantityText}>
+              {cartItem ? cartItem.quantity : 0}
+            </Text>
+            <TouchableOpacity
+              style={styles.quantityButton}
+              onPress={handleAddToCart}
+            >
+              <Feather name="plus" size={24} color="white" />
+            </TouchableOpacity>
+          </View>
+        </View>
+      </ScrollView>
+    </SafeAreaView>
   );
 };
 
 const styles = StyleSheet.create({
-  screenContainer: {
+  safeArea: {
     flex: 1,
-    backgroundColor: "#f5f5f5",
-    padding: 10,
+    backgroundColor: "#ffffff",
+    marginTop: 5,
+  },
+  scrollView: {
+    flex: 1,
+  },
+  imageContainer: {
+    width: "100%",
+    height: 300,
+    overflow: "hidden",
   },
   dishImage: {
     width: "100%",
-    height: 300,
-    borderRadius: 10,
-    marginBottom: 20,
+    height: "100%",
+  },
+  contentContainer: {
+    flex: 1,
+    padding: 20,
   },
   dishDetails: {
-    flex: 1,
-    justifyContent: "flex-start",
+    marginBottom: 20,
   },
   dishName: {
-    fontSize: 24,
-    fontWeight: "bold",
-    marginBottom: 10,
+    fontSize: 28,
+    fontWeight: "700",
+    color: "#1a1a1a",
+    marginBottom: 8,
   },
   dishPrice: {
-    fontSize: 18,
-    color: "green",
-    marginBottom: 10,
+    fontSize: 22,
+    fontWeight: "600",
+    color: "#4CAF50",
+    marginBottom: 16,
   },
   dishDescription: {
     fontSize: 16,
-    color: "#555",
+    lineHeight: 24,
+    color: "#4a4a4a",
   },
   quantityControlContainer: {
-    alignItems: "center",
-    marginVertical: 15,
-  },
-  quantityControl: {
     flexDirection: "row",
     alignItems: "center",
-    backgroundColor: "#f0f0f0",
-    borderRadius: 25,
-    paddingVertical: 8,
-    paddingHorizontal: 15,
-    width: 120,
-    justifyContent: "space-between",
+    justifyContent: "center",
+    marginTop: 20,
   },
   quantityButton: {
-    fontSize: 20,
-    fontWeight: "500",
-    color: "#333",
-    paddingHorizontal: 8,
+    width: 44,
+    height: 44,
+    borderRadius: 22,
+    backgroundColor: "#007AFF",
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  quantityButtonDisabled: {
+    backgroundColor: "#E0E0E0",
   },
   quantityText: {
-    fontSize: 16,
-    fontWeight: "500",
-    color: "#333",
-    minWidth: 20,
+    fontSize: 20,
+    fontWeight: "600",
+    color: "#1a1a1a",
+    marginHorizontal: 20,
+    minWidth: 30,
     textAlign: "center",
   },
 });

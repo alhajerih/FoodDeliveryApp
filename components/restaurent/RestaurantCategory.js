@@ -5,7 +5,6 @@ import {
   StyleSheet,
   Text,
   TouchableOpacity,
-  View,
 } from "react-native";
 
 const RestaurantCategory = ({
@@ -16,21 +15,22 @@ const RestaurantCategory = ({
   return (
     <FlatList
       data={categories}
-      keyExtractor={(item) => item.id.toString()}
+      showsHorizontalScrollIndicator={false}
+      keyExtractor={(item) => item._id.toString()}
       renderItem={({ item }) => (
         <TouchableOpacity
-          onPress={() => onCategoryPress(item.categoryName)}
+          onPress={() => onCategoryPress(item.name)}
           style={[
             styles.categoryContainer,
-            selectedCategory === item.categoryName && styles.selectedCategory,
+            selectedCategory === item.name && styles.selectedCategory,
           ]}
         >
           <Image
-            source={{ uri: item.categoryImage }}
+            source={{ uri: item.image }}
             style={styles.categoryImage}
             resizeMode="contain"
           />
-          <Text style={styles.categoryText}>{item.categoryName}</Text>
+          <Text style={styles.categoryText}>{item.name}</Text>
         </TouchableOpacity>
       )}
       horizontal
@@ -43,7 +43,6 @@ export default RestaurantCategory;
 
 const styles = StyleSheet.create({
   categoriesList: {
-    // flex: 1,
     paddingVertical: 10,
     marginBottom: 30,
   },

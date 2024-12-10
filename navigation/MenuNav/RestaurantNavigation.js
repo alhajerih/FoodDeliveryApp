@@ -1,9 +1,9 @@
 import { StyleSheet, TouchableOpacity, View, Text } from "react-native";
-import React from "react";
+import React, { useContext } from "react";
 import { createNativeStackNavigator } from "@react-navigation/native-stack";
 import { Ionicons } from "react-native-vector-icons";
+import SimpleLineIcons from "@expo/vector-icons/SimpleLineIcons";
 
-// Import Cart Context Hook
 import { useCart } from "../../context/CartContext";
 
 import RestaurantCatagoriesScreen from "../../screens/RestaurantCatagoriesScreen";
@@ -11,12 +11,15 @@ import MenuScreen from "../../screens/MenuScreen";
 import DishScreen from "../../screens/DishScreen";
 import ShoppingCartScreen from "../../screens/ShoppingCartScreen";
 import { useNavigation } from "@react-navigation/native";
+import UserContext from "../../context/UserContext";
+import { deleteToken } from "../../src/api/storage";
 
 const Stack = createNativeStackNavigator();
 
 const RestaurantNavigation = () => {
-  const { cart } = useCart(); // Use the custom hook to access cart
+  const { cart } = useCart();
   const navigation = useNavigation();
+  const [authenticated, setAuthenticated] = useContext(UserContext);
   // Header Right Component (Cart Icon with Badge)
   const renderCartIcon = () => (
     <TouchableOpacity
@@ -45,15 +48,33 @@ const RestaurantNavigation = () => {
       )}
     </TouchableOpacity>
   );
+  const renderLogoutIcon = () => (
+    <TouchableOpacity
+      style={{ marginRight: 15 }}
+      onPress={() => {
+        deleteToken();
+        setAuthenticated(false);
+      }}
+    >
+      <SimpleLineIcons name="logout" size={22} color="black" />
+    </TouchableOpacity>
+  );
 
   return (
-    <Stack.Navigator>
+    <Stack.Navigator
+      screenOptions={{
+        headerTransparent: true,
+        headerTitle: "",
+        headerStyle: { backgroundColor: "white" },
+      }}
+    >
       <Stack.Screen
         name="RestaurantCategories"
         component={RestaurantCatagoriesScreen}
         options={{
           title: "Restaurants",
           headerRight: renderCartIcon, // Add Cart Icon to Header
+          headerLeft: renderLogoutIcon,
         }}
       />
       <Stack.Screen
